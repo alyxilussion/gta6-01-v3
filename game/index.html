@@ -1,88 +1,26 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Frostline — a snowy open-world crime game</title>
-<link rel="icon" href="data:,">
+<title>FROSTLINE — a snowy neon open-world crime game</title>
 <style>
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #0a101c; font-family: 'Segoe UI', system-ui, sans-serif; color: #e8eef7; }
-  #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
-  #status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .hud { position: fixed; z-index: 5; pointer-events: none; }
-  #stats { top: 14px; left: 14px; background: rgba(8,14,26,0.72); border: 1px solid rgba(150,180,220,0.25); border-radius: 10px; padding: 10px 14px; min-width: 240px; }
-  #stats .row { display: flex; align-items: center; gap: 8px; margin: 3px 0; font-size: 15px; }
-  #hp-bar { width: 120px; height: 10px; background: #26314a; border-radius: 5px; overflow: hidden; }
-  #hp-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #39d98a, #7dff5e); transition: width 0.2s; }
-  #cash { color: #7dff5e; font-weight: 700; }
-  #wanted { font-size: 20px; letter-spacing: 2px; }
-  #clock { color: #9fb2cc; font-variant-numeric: tabular-nums; }
-  #minimap-wrap { top: 14px; right: 14px; background: rgba(8,14,26,0.72); border: 1px solid rgba(150,180,220,0.25); border-radius: 10px; padding: 6px; }
-  #minimap { display: block; width: 168px; height: 168px; border-radius: 6px; }
-  #minimap-wrap .cap { text-align: center; font-size: 11px; letter-spacing: 2px; color: #9fb2cc; margin-top: 4px; }
-  #objective { left: 14px; bottom: 14px; max-width: 560px; background: rgba(8,14,26,0.72); border-left: 4px solid #ffd23c; border-radius: 6px; padding: 10px 14px; font-size: 15px; line-height: 1.4; }
-  #objective .lbl { color: #ffd23c; font-size: 11px; letter-spacing: 2px; }
-  #speed-box { right: 14px; bottom: 14px; text-align: right; background: rgba(8,14,26,0.72); border: 1px solid rgba(150,180,220,0.25); border-radius: 10px; padding: 10px 14px; }
-  #speed { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
-  #storm-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 12px; color: #9fb2cc; }
-  #storm-bar { width: 110px; height: 8px; background: #26314a; border-radius: 4px; overflow: hidden; }
-  #storm-fill { height: 100%; width: 40%; background: linear-gradient(90deg, #7fb8d9, #eef4fb); }
-  #toast { left: 50%; top: 76px; transform: translateX(-50%); background: rgba(8,14,26,0.85); border: 1px solid #ffd23c; color: #ffd23c; border-radius: 8px; padding: 10px 18px; font-size: 15px; font-weight: 600; opacity: 0; transition: opacity 0.3s; max-width: 80vw; text-align: center; }
-  #toast.show { opacity: 1; }
-  #controls-hint { left: 50%; top: 16px; transform: translateX(-50%); font-size: 12px; color: rgba(232,238,247,0.65); text-align: center; }
-  .hidden { display: none !important; }
-  #start-screen { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg, rgba(6,12,24,0.55), rgba(6,12,24,0.88)); }
-  #start-card { max-width: 620px; padding: 34px 40px; text-align: center; background: rgba(10,18,34,0.92); border: 1px solid rgba(120,200,255,0.35); border-radius: 16px; box-shadow: 0 0 60px rgba(55,224,255,0.15); }
-  #start-card h1 { margin: 0 0 4px; font-size: 54px; letter-spacing: 8px; color: #37e0ff; text-shadow: 0 0 24px rgba(55,224,255,0.7); }
-  #start-card h2 { margin: 0 0 16px; font-size: 15px; letter-spacing: 4px; color: #ffd23c; font-weight: 600; }
-  #start-card p { font-size: 15px; line-height: 1.55; color: #c9d6e8; margin: 10px 0; text-align: left; }
-  #start-card .keys { font-size: 13px; color: #9fb2cc; text-align: left; line-height: 1.8; }
-  #start-card .keys b { color: #e8eef7; background: #26314a; border-radius: 4px; padding: 1px 7px; font-family: monospace; }
-  .btn { pointer-events: auto; cursor: pointer; font-size: 17px; font-weight: 700; letter-spacing: 1px; color: #08131f; background: #37e0ff; border: none; border-radius: 8px; padding: 12px 26px; margin: 14px 6px 0; }
-  .btn:hover { background: #7df0ff; }
-  .btn.secondary { background: transparent; color: #37e0ff; border: 1px solid #37e0ff; }
-  .btn:disabled { opacity: 0.4; cursor: default; }
-  #btn-mute { position: fixed; top: 216px; right: 14px; z-index: 6; pointer-events: auto; cursor: pointer; background: rgba(8,14,26,0.72); color: #9fb2cc; border: 1px solid rgba(150,180,220,0.25); border-radius: 6px; padding: 5px 10px; font-size: 12px; }
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #070b16; }
+  #game { display: block; width: 100vw; height: 100vh; image-rendering: auto; cursor: crosshair; }
+  #fallback { position: fixed; inset: 0; display: none; place-items: center; color: #cfe6ff;
+    font: 16px/1.5 system-ui, sans-serif; text-align: center; padding: 24px; }
 </style>
 </head>
 <body>
-<canvas id="game" aria-label="Frostline: a snowy open-world crime game. Drive, steal cars, dodge the police and finish the crew's missions."></canvas>
-<p id="status" role="status" aria-live="polite"></p>
-
-<div id="stats" class="hud">
-  <div class="row"><span>HP</span><div id="hp-bar"><div id="hp-fill"></div></div></div>
-  <div class="row"><span>CASH</span><span id="cash">$150</span><span id="clock">23:40</span></div>
-  <div class="row"><span>WANTED</span><span id="wanted">☆☆☆☆☆</span></div>
-</div>
-
-<div id="minimap-wrap" class="hud"><canvas id="minimap" width="168" height="168"></canvas><div class="cap">FROSTLINE</div></div>
-
-<div id="objective" class="hud"><div class="lbl">MISSION</div><div id="objective-text">Press START to begin the night.</div></div>
-
-<div id="speed-box" class="hud">
-  <div id="speed">ON FOOT</div>
-  <div id="storm-row"><span id="storm-label">SNOW</span><div id="storm-bar"><div id="storm-fill"></div></div></div>
-</div>
-
-<div id="toast" class="hud"></div>
-<div id="controls-hint" class="hud">WASD move / drive &nbsp;·&nbsp; E enter or steal a car &nbsp;·&nbsp; F punch &nbsp;·&nbsp; Shift run &nbsp;·&nbsp; P pause &nbsp;·&nbsp; M mute</div>
-<button id="btn-mute">SOUND: ON</button>
-
-<div id="start-screen">
-  <div id="start-card">
-    <h1>FROSTLINE</h1>
-    <h2>SNOW · NEON · GETAWAY</h2>
-    <p>You are <b>Mara Kessler</b>, getaway driver of the Whiteout Crew. Tonight a blizzard rolls over Frostline, a neon mountain city buried in snow, and the crew is hitting the Aurora vault. Meet Jax at the Neon Lodge, steal your wheels, grab the package off the frozen lake, lose the cops in the whiteout — and drive the mountain pass before the storm eats the road.</p>
-    <p>Explore the city on foot or by car. Steal cars, dodge traffic and pedestrians, fight back, and watch your wanted level: the Frostline police chase hard, and the frozen lake is the one place they lose your trail. The storm changes everything — grip, visibility, and how fast the law finds you.</p>
-    <div class="keys">
-      <b>W A S D</b> move / drive &nbsp; <b>E</b> enter or steal a car &nbsp; <b>F</b> punch<br>
-      <b>Shift</b> run &nbsp; <b>P</b> pause &nbsp; <b>M</b> mute &nbsp; Progress saves automatically.
-    </div>
-    <button id="btn-start" class="btn">START THE NIGHT</button>
-    <button id="btn-continue" class="btn secondary">CONTINUE SAVE</button>
-  </div>
-</div>
-
-<script type="module" src="./src/main.js"></script>
+<canvas id="game" width="1280" height="800"></canvas>
+<div id="fallback">FROSTLINE needs JavaScript and a desktop browser to play.</div>
+<script src="src/config.js"></script>
+<script src="src/world.js"></script>
+<script src="src/entities.js"></script>
+<script src="src/missions.js"></script>
+<script src="src/audio.js"></script>
+<script src="src/input.js"></script>
+<script src="src/render.js"></script>
+<script src="src/main.js"></script>
 </body>
 </html>

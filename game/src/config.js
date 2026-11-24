@@ -1,54 +1,103 @@
-// Frostline — shared tuning constants and a seeded random generator.
-// The city is a snowy mountain town at night: neon signs on snow, a frozen lake,
-// a mountain pass road. Deterministic so every run builds the same city.
-export const CFG = {
-  WORLD: 3600,            // city is WORLD x WORLD pixels
-  ROAD_GAP: 300,          // distance between road centerlines
-  ROAD_W: 64,             // road width
-  VIEW_W: 1280,
-  VIEW_H: 800,
-  PLAYER_R: 13,
-  WALK_SPEED: 175,
-  RUN_SPEED: 265,
-  CAR_ACCEL: 420,
-  CAR_MAX_SPEED: 520,
-  CAR_BRAKE: 700,
-  POLICE_MAX: 520,
-  WANTED_DECAY_S: 14,    // seconds without crime before one star drops
-  SAVE_KEY: 'frostline-save-v1',
+// FROSTLINE — config: world constants, palette, helpers.
+// A snowy neon mountain city at night. Everything here is original.
+
+// World geometry (pixels, top-down).
+var WORLD_W = 3200;
+var WORLD_H = 2400;
+var ROAD_W = 96;
+var ROAD_V = [400, 1000, 1600, 2200, 2800]; // vertical road centre lines (x)
+var ROAD_H = [400, 900, 1400, 1900];        // horizontal road centre lines (y)
+
+// The frozen lake (north-east) and the mountain pass (north edge).
+var LAKE = { x: 2650, y: 380, rx: 430, ry: 300 };
+var PASS = { x: 1600, y: 70 };              // mountain-pass gate marker
+var LODGE = { x: 860, y: 280, w: 200, h: 130 }; // Neon Lodge building
+var LODGE_DOOR = { x: 960, y: 430 };        // meet Jax here
+var SPAWN = { x: 960, y: 560 };             // Mara starts on foot, south of the lodge
+
+// Player tuning.
+var WALK_SPEED = 175;
+var CAR_TOP_SPEED = 430;
+var CAR_ACCEL = 320;
+var CAR_BRAKE = 520;
+var CAR_TURN = 2.6;
+var POLICE_CAR_SPEED = 455;
+var POLICE_FOOT_SPEED = 188;
+var PUNCH_RANGE = 52;
+var PUNCH_COOLDOWN = 0.35;
+
+// Wanted / heat.
+var WANTED_MAX = 5;
+var WANTED_DECAY_SECONDS = 9;      // one star fades when no cop can see you
+var WANTED_LAKE_DECAY_SECONDS = 3; // the frozen lake loses the trail fast
+
+// Blizzard: grip, sight and police detection all ride on this 0..1 value.
+var BLIZZARD_MIN = 0.12;
+var BLIZZARD_MAX = 1.0;
+
+// Money.
+var START_MONEY = 120;
+var MISSION_REWARDS = [200, 300, 500, 800, 2000];
+
+var SAVE_KEY = 'frostline-save-v1';
+
+// Palette: night snow, neon signs, sodium streetlight.
+var PAL = {
+  groundSnow: '#b9c6d8',
+  groundSnowDark: '#9fb0c6',
+  road: '#232a38',
+  roadEdge: '#3a4557',
+  lane: '#c8b25a',
+  sidewalk: '#7e8ca3',
+  building: '#2b3242',
+  buildingRoof: '#39415a',
+  neonPink: '#ff4d8d',
+  neonCyan: '#37e0ff',
+  neonAmber: '#ffb347',
+  neonGreen: '#59ffa0',
+  lakeIce: '#a8dcf0',
+  lakeIceDeep: '#7fb8d8',
+  pine: '#1d4a33',
+  pineSnow: '#dcebf2',
+  lampGlow: '#ffd98a',
+  hudBg: 'rgba(6, 12, 24, 0.72)',
+  hudLine: '#37e0ff',
+  text: '#eaf4ff',
+  textDim: '#9fb4cc',
+  star: '#ffd23e',
+  danger: '#ff5252'
 };
 
-// mulberry32 — tiny deterministic PRNG so the city never changes between runs.
-export function makeRng(seed) {
-  let a = seed >>> 0;
-  return function rng() {
-    a |= 0; a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
+// ---- helpers ---------------------------------------------------------------
 
-export function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
-export function dist2(ax, ay, bx, by) { const dx = ax - bx, dy = ay - by; return dx * dx + dy * dy; }
-export function angleTo(ax, ay, bx, by) { return Math.atan2(by - ay, bx - ax); }
-// Shortest signed turn from angle a toward angle b.
-export function angleDiff(a, b) {
-  let d = b - a;
+function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+function lerp(a, b, t) { return a + (b - a) * t; }
+function dist2(ax, ay, bx, by) { var dx = ax - bx, dy = ay - by; return dx * dx + dy * dy; }
+function dist(ax, ay, bx, by) { return Math.sqrt(dist2(ax, ay, bx, by)); }
+function angleTo(ax, ay, bx, by) { return Math.atan2(by - ay, bx - ax); }
+function angleDiff(a, b) {
+  var d = b - a;
   while (d > Math.PI) d -= Math.PI * 2;
   while (d < -Math.PI) d += Math.PI * 2;
   return d;
 }
-export function pick(rng, arr) { return arr[Math.floor(rng() * arr.length)]; }
+function fmtMoney(n) { return '$' + Math.floor(n).toLocaleString('en-US'); }
+function fmtClock(seconds) {
+  var m = Math.floor(seconds / 60), s = Math.floor(seconds % 60);
+  return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+}
 
-export const CAR_COLORS = ['#d9392b', '#2b7fd9', '#e8b93c', '#39d98a', '#8a5fd9', '#e8e8e8', '#222831', '#ff7a1a'];
-export const NEON_SIGNS = [
-  { text: 'NEON LODGE', color: '#ff2e88' },
-  { text: 'FROSTLINE', color: '#37e0ff' },
-  { text: 'SNOW BAR', color: '#ffd23c' },
-  { text: 'SKI RENTAL', color: '#7dff5e' },
-  { text: '24H DINER', color: '#ff7a1a' },
-  { text: 'HOTEL AURORA', color: '#c07dff' },
-  { text: 'CASINO PEAK', color: '#ff3b3b' },
-  { text: 'GARAGE 9', color: '#3cffce' },
-];
+// Deterministic RNG so the city is the same every run (mulberry32).
+function makeRng(seed) {
+  var a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    var t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+var rng = makeRng(20261124);
+
+function pick(arr) { return arr[Math.floor(rng() * arr.length)]; }
+function randRange(lo, hi) { return lo + rng() * (hi - lo); }

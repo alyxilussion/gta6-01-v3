@@ -1,102 +1,122 @@
-// Frostline — the story: five chained missions for Mara Kessler, getaway driver
-// of the Whiteout Crew, on the night the blizzard hits Frostline.
-export const MISSIONS = [
+// FROSTLINE — missions: Mara Kessler and the Whiteout Crew, five chained jobs.
+// Mission 0 meet Jax — 1 steal a car — 2 the package on the lake —
+// 3 lose a 3-star heat — 4 the whiteout getaway to the pass — then free roam.
+
+var MISSIONS = [
   {
-    id: 1,
-    name: 'Cold Open',
-    brief: 'Meet Jax at the Neon Lodge. The crew is waiting.',
-    target: (w) => ({ x: w.lodge.x, y: w.lodge.y, r: 70, label: 'NEON LODGE' }),
-    done: 'Jax: "Tonight we take the Aurora vault. First, wheels."',
-    reward: 100,
+    id: 'meet-jax',
+    name: '1 — Meet Jax',
+    title: 'Meet Jax at the Neon Lodge',
+    brief: 'Jax is waiting under the pink neon. The crew’s last job starts tonight.',
+    target: function () { return { x: LODGE_DOOR.x, y: LODGE_DOOR.y, label: 'NEON LODGE' }; },
+    reward: MISSION_REWARDS[0],
+    hint: 'Follow the pink marker. Walk with WASD / arrows.'
   },
   {
-    id: 2,
-    name: 'Borrowed Wheels',
-    brief: 'Steal a car — any car. Press E next to one. The crew needs wheels, not manners.',
-    target: (w) => ({ x: w.garage.x, y: w.garage.y, r: 120, label: 'GARAGE 9' }),
-    done: 'Nice. A stolen car is a fast car. Now the package.',
-    reward: 150,
-    needsCar: true,
+    id: 'steal-car',
+    name: '2 — Steal a Car',
+    title: 'Steal a car',
+    brief: 'No wheels, no job. Take any parked car — press E beside it.',
+    target: function () { return { x: 1060, y: 520, label: 'PARKED CAR' }; },
+    reward: MISSION_REWARDS[1],
+    hint: 'Press E next to a parked car. Stealing raises your wanted level.'
   },
   {
-    id: 3,
-    name: 'The Frozen Drop',
-    brief: 'Drive to the frozen lake and grab the package. Cops patrol the shore — stay cold.',
-    target: (w) => ({ x: w.lake.x + w.lake.w / 2, y: w.lake.y + w.lake.h / 2, r: 110, label: 'FROZEN LAKE' }),
-    done: 'Package secured. The vault crew is in position.',
-    reward: 300,
-    needsCar: true,
+    id: 'lake-package',
+    name: '3 — The Package',
+    title: 'Grab the package off the frozen lake',
+    brief: 'The drop is out on the ice. Drive on — the lake is the one place the law loses your trail.',
+    target: function () { return { x: LAKE.x, y: LAKE.y, label: 'PACKAGE' }; },
+    reward: MISSION_REWARDS[2],
+    hint: 'The package sits in the middle of the frozen lake.'
   },
   {
-    id: 4,
-    name: 'Heat Wave',
-    brief: 'The alarm tripped. Lose the cops — drop your wanted level to zero, then reach the Lodge.',
-    target: (w) => ({ x: w.lodge.x, y: w.lodge.y, r: 70, label: 'NEON LODGE' }),
-    done: 'Clean. The heat is off us. One last run.',
-    reward: 400,
-    needsClean: true,
+    id: 'lose-heat',
+    name: '4 — Lose the Heat',
+    title: 'Lose the 3-star wanted level',
+    brief: 'The package tripped an alarm. Three stars. Break line of sight — hide out on the lake until it fades.',
+    target: function () { return { x: LAKE.x, y: LAKE.y, label: 'HIDE ON THE LAKE' }; },
+    reward: MISSION_REWARDS[3],
+    hint: 'Wanted fades when no cop can see you — fastest on the frozen lake.'
   },
   {
-    id: 5,
-    name: 'Whiteout Run',
-    brief: 'Final getaway: drive the package through the blizzard to the mountain pass. Do not stop.',
-    target: (w) => ({ x: w.pass.x + w.pass.w / 2, y: w.pass.y + w.pass.h / 2, r: 130, label: 'MOUNTAIN PASS' }),
-    done: 'You made it through the whiteout. The Whiteout Crew owns Frostline tonight.',
-    reward: 1000,
-    needsCar: true,
-    final: true,
-  },
+    id: 'whiteout-getaway',
+    name: '5 — Whiteout Getaway',
+    title: 'Reach the mountain pass in the whiteout',
+    brief: 'One last run through the storm. The pass is north — the crew is waiting on the other side.',
+    target: function () { return { x: PASS.x, y: PASS.y, label: 'MOUNTAIN PASS' }; },
+    reward: MISSION_REWARDS[4],
+    hint: 'Drive north. The blizzard is at its worst — grip is low, but so is police sight.'
+  }
 ];
 
-export function startMissions(state) {
-  state.missionIdx = 0;
-  state.mission = MISSIONS[0];
-  state.missionDone = false;
-  state.storyDone = false;
-  state.toast('Mission 1 — Cold Open: meet Jax at the Neon Lodge');
-  state.sfx.mission();
+function makeMissionState() {
+  return {
+    index: 0,                 // which mission is active (5 = free roam)
+    done: false,              // all five finished
+    banner: '', bannerTimer: 0,
+    toast: '', toastTimer: 0,
+    packageTaken: false,
+    heatSet: false
+  };
 }
 
-// Returns true when the mission list is finished.
-export function updateMissions(state, dt) {
-  if (state.storyDone || !state.mission) return true;
-  const m = state.mission;
-  const t = m.target(state.world);
-  const p = state.player;
-  // Mission 4 starts hot: the alarm trips the moment it begins.
-  if (m.id === 4 && !m.armed) {
-    m.armed = true;
-    state.wanted = Math.max(state.wanted, 3);
-    state.toast('ALARM TRIPPED — wanted level 3!');
+function currentMission(ms) {
+  return ms.index < MISSIONS.length ? MISSIONS[ms.index] : null;
+}
+
+function missionTarget(ms) {
+  var m = currentMission(ms);
+  return m ? m.target() : null;
+}
+
+function missionTitle(ms) {
+  var m = currentMission(ms);
+  return m ? m.title : 'Free roam — Frostline is yours';
+}
+
+function showBanner(ms, text) { ms.banner = text; ms.bannerTimer = 3.2; }
+function showToast(ms, text) { ms.toast = text; ms.toastTimer = 4; }
+
+// Advance the mission state. Returns 'complete' when a mission finishes.
+function updateMissions(ms, game, dt) {
+  var p = game.player;
+  var m = currentMission(ms);
+  if (!m) return null;
+  var t = m.target();
+  var done = false;
+
+  if (ms.index === 0) {
+    done = dist(p.x, p.y, t.x, t.y) < 95;
+  } else if (ms.index === 1) {
+    done = !!p.inCar;
+  } else if (ms.index === 2) {
+    done = dist(p.x, p.y, t.x, t.y) < 80;
+    if (done) { ms.packageTaken = true; p.wanted = Math.max(p.wanted, 1); }
+  } else if (ms.index === 3) {
+    if (!ms.heatSet) { p.wanted = 3; ms.heatSet = true; showToast(ms, '3 STARS — break line of sight!'); }
+    done = p.wanted <= 0;
+  } else if (ms.index === 4) {
+    done = World.onPass(p.x, p.y) || dist(p.x, p.y, t.x, t.y) < 110;
   }
-  const inTarget = Math.hypot(p.x - t.x, p.y - t.y) < t.r;
-  const carOk = !m.needsCar || p.inCar;
-  const cleanOk = !m.needsClean || state.wanted === 0;
-  if (inTarget && carOk && cleanOk) {
-    p.cash += m.reward;
-    state.sfx.coin();
-    state.toast(`Mission complete — ${m.name} (+$${m.reward})`);
-    state.addFloat(`+$${m.reward}`, p.x, p.y - 30, '#7dff5e');
-    state.missionIdx += 1;
-    if (state.missionIdx >= MISSIONS.length) {
-      state.mission = null;
-      state.storyDone = true;
-      state.sfx.mission();
-      state.toast('STORY COMPLETE — Frostline is yours. Free roam!');
-      return true;
+
+  if (done) {
+    p.money += m.reward;
+    AudioSys.missionComplete();
+    if (ms.index === MISSIONS.length - 1) {
+      ms.done = true;
+      ms.index = MISSIONS.length;
+      showBanner(ms, 'WHITEOUT CREW — FREE ROAM');
+      showToast(ms, 'All five jobs done. Frostline is yours, Mara.');
+    } else {
+      ms.index++;
+      var next = MISSIONS[ms.index];
+      showBanner(ms, 'JOB DONE  +' + fmtMoney(m.reward));
+      showToast(ms, 'Next: ' + next.title);
+      AudioSys.pickup();
     }
-    state.mission = MISSIONS[state.missionIdx];
-    state.sfx.mission();
-    state.toast(`Mission ${state.mission.id} — ${state.mission.name}: ${state.mission.brief}`);
+    game.save();
+    return 'complete';
   }
-  return false;
-}
-
-export function missionHint(state) {
-  const m = state.mission;
-  if (!m) return state.storyDone ? 'Free roam — Frostline is yours.' : '';
-  const p = state.player;
-  if (m.needsCar && !p.inCar) return `${m.brief} (you need a car — press E near one)`;
-  if (m.needsClean && state.wanted > 0) return `${m.brief} (wanted ${state.wanted}★ — hide on the frozen lake to cool off)`;
-  return m.brief;
+  return null;
 }

@@ -1,79 +1,92 @@
-# Frostline — a snowy open-world crime game
+# FROSTLINE — a snowy neon open-world crime game
 
-An original open-world crime game for the make.fun **gta6-01** bounty ("Make GTA 6").
-No Rockstar names, characters, maps or assets anywhere — the city, the crew and the
-story are all invented here.
+Entry for make.fun bounty **gta6-01 — "Make GTA 6"**. A complete open-world
+crime game that runs offline in a desktop browser from static files, with no
+network requests and no libraries. 100% original: its own city, characters,
+vehicles, names, story, art and sounds — nothing from Rockstar Games.
 
 ## The game
 
-You are **Mara Kessler**, getaway driver of the Whiteout Crew. On the night a blizzard
-rolls over **Frostline** — a neon mountain city buried in snow — the crew hits the
-Aurora vault. Five story missions:
+Frostline is a snowy neon mountain city at night, built around a frozen lake
+and a mountain pass. You play **Mara Kessler**, getaway driver of the
+**Whiteout Crew**. Five chained missions, then free roam:
 
-1. **Cold Open** — meet Jax at the Neon Lodge.
-2. **Borrowed Wheels** — steal a car (any car).
-3. **The Frozen Drop** — drive to the frozen lake and grab the package.
-4. **Heat Wave** — the alarm trips; lose the cops, then reach the Lodge.
-5. **Whiteout Run** — final getaway through the blizzard to the mountain pass.
+1. **Meet Jax** — find Jax under the pink neon of the Neon Lodge.
+2. **Steal a Car** — take any parked car (press E beside it).
+3. **The Package** — grab the drop off the middle of the frozen lake.
+4. **Lose the Heat** — shake a 3-star wanted level. The lake is the one place
+   the law loses your trail.
+5. **Whiteout Getaway** — punch through the storm to the mountain pass.
 
-Then free roam. The blizzard is the hook: storm intensity changes road grip,
-visibility and how fast the police find you, and the frozen lake is the one place
-the law loses your trail.
+After the fifth job, free roam: collect street cash, steal cars, outrun the
+law, and survive the blizzard.
 
-## What's in it
+## The blizzard
 
-- A city to explore **on foot and by car**: a 3600×3600 grid city with roads,
-  neon-signed buildings, pines, street lamps and a frozen lake, all generated
-  from a fixed seed.
-- **Traffic** that follows the roads and brakes for you, **pedestrians** who
-  wander and flee, and **parked cars to steal** (press E).
-- A **wanted level (0–5 stars)** with police cars that chase and ram you and
-  foot cops who chase and punch you; wanted decays over time, twice as fast
-  while you hide on the frozen lake.
-- **Combat** on foot (F to punch), **missions with a story**, cash rewards,
-  a **HUD with a minimap**, health, cash, wanted stars, speed, a clock and a
-  storm meter, a **start screen**, and **saves** (localStorage, auto-saved).
-- **Sound, all synthesized** with WebAudio (engine hum, sirens, wind, punches,
-  crashes, chimes) — no audio files, no network requests.
-- Polish: snowfall, headlight cones, flashing police light bars, screen shake,
-  floating combat text, a pulsing mission beacon, day-cycle clock.
+The storm is a live system, not scenery. As it rises, road grip falls (cars
+slide), visibility closes in (whiteout fog), and police sight shrinks — which
+is exactly how you lose a tail. As it falls, grip returns and the cops see
+farther. The frozen lake hides you fastest: wanted stars fade in 3 seconds
+there instead of 9.
+
+## Systems
+
+- **On foot and by car** — walk the sidewalks or steal any parked (or slow)
+  car; traffic drives the road grid around you.
+- **Traffic and pedestrians** — 14 traffic cars on the road network, 20
+  pedestrians who stroll, flee from danger, and go down when hit.
+- **Wanted level and police** — 0–5 stars. Stealing, punching and hitting
+  pedestrians raise the heat; police cruisers chase and ram, foot cops chase
+  on foot and can bust Mara. Heat fades when no cop can see you.
+- **Combat** — punch (Space) on foot: pedestrians go down, cops take 3 hits.
+- **Missions and story** — five chained jobs with a marker, briefing and
+  reward, then free roam with street cash to find.
+- **HUD with minimap** — mission box, wanted stars, money, health, blizzard
+  meter, speed, context prompts, and a live minimap with police, traffic and
+  the mission marker.
+- **Start screen and save** — New Game / Continue; progress autosaves to
+  localStorage (mission, money, health, wanted, position, car).
+- **Sound** — everything synthesized in WebAudio: engine hum, wind, sirens,
+  punches, crashes, pickup chimes and mission fanfares. M mutes.
 
 ## Controls
 
 | Key | Action |
-| --- | --- |
-| W A S D / arrows | Move on foot / drive |
-| E | Enter a car, steal a parked car, exit a car |
-| F | Punch |
-| Shift | Run |
-| P / Esc | Pause |
+| --- | ------ |
+| WASD / arrows | Move on foot, drive |
+| E | Steal a car / leave a car |
+| Space | Punch (on foot) |
+| P / Esc | Pause (saves) |
+| Enter | Confirm on menus |
 | M | Mute |
 
-## Play it
+## Run it
 
 ```sh
-node serve.ts
-# open http://localhost:8080
+node serve.ts        # serves game/ at http://localhost:8080
 ```
 
-No build step, no dependencies. `game/index.html` opens in desktop Chrome and
-plays with no network request; every file it loads lives under `game/`.
+or serve `game/` with any static HTTP server and open `index.html` in
+desktop Chrome. No build step, no network requests.
+
+Screenshots are real renders of this game, taken in headless Chrome from the
+running game (`?demo=chase`, `?demo=foot`, `?demo=lake`, `?demo=start` set up
+each scene).
 
 ## Files
 
-- `main.ts` — the entry program (Node 22): copies `game/` and `screenshots/`
-  to `/output` and writes `dossier.json` with the vendored make.fun library.
-- `game/index.html` — the page: canvas, HUD, start screen.
-- `game/src/config.js` — tuning constants and the seeded RNG.
-- `game/src/world.js` — city generation and collision.
-- `game/src/input.js` — keyboard and mouse.
-- `game/src/audio.js` — synthesized WebAudio sound.
-- `game/src/entities.js` — player, traffic, pedestrians, police, wanted level.
-- `game/src/missions.js` — the five-mission story.
-- `game/src/render.js` — canvas drawing and the minimap.
-- `game/src/main.js` — the loop, HUD, saving, screenshot presets.
-- `vendor/makefun-game.ts` — the kit's library, unchanged.
-- `screenshots/` — 4 real renders of the game's own code (cover first).
+- `main.ts` — the entrypoint: copies `game/` + `screenshots/` to the output
+  directory and writes `dossier.json` with the kit's `buildDossier`.
+- `game/index.html` — the page; loads the scripts below in order.
+- `game/src/config.js` — world constants, palette, helpers, seeded RNG.
+- `game/src/world.js` — the city: roads, buildings, lake, pass, lamps, pines.
+- `game/src/entities.js` — Mara, cars, traffic, pedestrians, police.
+- `game/src/missions.js` — the five chained jobs and their rewards.
+- `game/src/audio.js` — synthesized WebAudio: engine, wind, siren, effects.
+- `game/src/input.js` — keyboard + menu clicks.
+- `game/src/render.js` — canvas drawing: city, cars, people, storm, HUD, menus.
+- `game/src/main.js` — game loop, screens, wanted heat, saves, demo scenes.
+- `vendor/makefun-game.ts` — the kit's dossier library, unchanged.
 
 ## License
 
