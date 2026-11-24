@@ -9,7 +9,7 @@
 // Outside the grader MAKEFUN_OUTPUT_DIR stands in for /output; inside it the
 // platform sets the output directory itself.
 
-import { cpSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-game.ts';
@@ -18,9 +18,17 @@ const repoRoot = dirname(fileURLToPath(import.meta.url));
 const outDir = process.env.MAKEFUN_OUTPUT_DIR || '/output';
 
 // The grader runs this program twice and both runs must write the same bytes,
-// so the output directory is rebuilt from scratch every time.
-rmSync(outDir, { recursive: true, force: true });
-mkdirSync(outDir, { recursive: true });
+// so the output directory is emptied before every run. The directory itself
+// is never removed: the grader mounts it as a volume, and removing a mount
+// point fails the run.
+function clearContents(dir: string): void {
+  mkdirSync(dir, { recursive: true });
+  for (const entry of readdirSync(dir)) {
+    rmSync(join(dir, entry), { recursive: true, force: true });
+  }
+}
+
+clearContents(outDir);
 
 cpSync(join(repoRoot, 'game'), join(outDir, 'game'), { recursive: true });
 cpSync(join(repoRoot, 'screenshots'), join(outDir, 'screenshots'), { recursive: true });
